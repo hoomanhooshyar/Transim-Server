@@ -3,7 +3,7 @@ import base64
 import asyncio
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.relay_service import create_relay_service
-from app.schemas.messages import MobileMessage, ServerMessage
+from app.schemas.messages import MobileMessage, ServerMessage, AudioDeltaMessage, TranscriptMessage
 from google.genai.types import LiveClientRealtimeInput, Blob
 
 router = APIRouter()
@@ -79,10 +79,16 @@ async def websocket_endpoint(mobile_ws: WebSocket):
                                 for part in model_turn.parts:
                                     if part.inline_data:
                                         b64 = base64.b64encode(part.inline_data.data).decode('utf-8')
-                                        msg = ServerMessage(type="audio", data=b64)
+                                        # استفاده از type="audio_delta" که موبایل انتظار دارد
+                                        msg = AudioDeltaMessage(data=b64)
                                         await mobile_ws.send_text(msg.model_dump_json())
                                     if part.text:
-                                        msg = ServerMessage(type="text", data=part.text)
+                                        # استفاده از TranscriptMessage که موبایل انتظار دارد
+                                        msg = TranscriptMessage(
+                                            text=part.text,
+                                            isFinal=True,
+                                            agentId=agent_id
+                                        )
                                         await mobile_ws.send_text(msg.model_dump_json())
                                         print(f"🔵 {agent_id}: {part.text[:30]}...")
 

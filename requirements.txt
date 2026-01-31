@@ -1,6 +1,7 @@
-
 pydantic
 protobuf
 pydantic-settings
 python-dotenv
 fastapi
+uvicorn
+google-genai
